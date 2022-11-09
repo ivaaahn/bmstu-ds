@@ -1,8 +1,7 @@
-import math
+from collections.abc import Iterable
 from multiprocessing import Pool
-from typing import List
 
-from custom_rsa.calculations import split_to_parallel
+from custom_rsa.calculations import NUM_THREADS, split_to_parallel
 
 ENCRYPTED_POSTFIX = "encrypted"
 SIGNED_POSTFIX = "signed"
@@ -44,9 +43,9 @@ def write_decrypted(
         f.write(bytes(data))
 
 
-def converter_to_bytes(x, num_bytes):
+def convert_to_bytes(data: Iterable[int], num_bytes: int) -> bytes:
     res = b""
-    for item in x:
+    for item in data:
         res += int.to_bytes(item, num_bytes, "big")
     return res
 
@@ -59,10 +58,10 @@ def write_encrypted(
     postfix: str = ENCRYPTED_POSTFIX,
 ) -> None:
     data_len = len(data)
-    processes = max(1, min(10, data_len))
+    processes = max(1, min(NUM_THREADS, data_len))
     with Pool(processes=processes) as pool:
         results = pool.starmap(
-            converter_to_bytes,
+            convert_to_bytes,
             [
                 (chunk, num_bytes)
                 for chunk in split_to_parallel(data, data_len // processes)
