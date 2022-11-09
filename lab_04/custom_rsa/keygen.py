@@ -39,7 +39,7 @@ class KeyGenRSA:
     _PUBLIC_KEY_NAME = ".rsa/public.key"
     _PRIVATE_KEY_NAME = ".rsa/private.key"
 
-    def __init__(self, nbits: int = 32) -> None:
+    def __init__(self, nbits: int = 16) -> None:
         self._p = None
         self._q = None
         self._public = None
@@ -121,10 +121,6 @@ class KeyGenRSA:
         #  => ex = 1 (mod phi_n)
 
         # d = x % phi_n
-
-        # pub, priv = rsa.newkeys(nbits=KEY_LENGTH, poolsize=10, accurate=True)
-        # rsa.encrypt()
-        # return PrivateKey(priv.n, priv.d), PublicKey(pub.n, pub.e)
 
         self._private, self._public = PrivateKey(n, d), PublicKey(n, e)
         click.secho("Generated keys.", fg="green")
