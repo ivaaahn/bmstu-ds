@@ -2,6 +2,7 @@ import functools
 import heapq
 import json
 from collections import Counter
+from pprint import pprint
 from typing import Optional
 
 import click
@@ -31,6 +32,67 @@ class Node:
     def __str__(self) -> str:
         return f"({self.key}, {self.value})"
 
+    def display(self):
+        lines, *_ = self._display_aux()
+        for line in lines:
+            print(line)
+
+    def _display_aux(self):
+        """Returns list of strings, width, height, and horizontal coordinate of the root."""
+        # No child.
+        if self.right is None and self.left is None:
+            line = "%s" % self.key
+            width = len(line)
+            height = 1
+            middle = width // 2
+            return [line], width, height, middle
+
+        # Only left child.
+        if self.right is None:
+            lines, n, p, x = self.left._display_aux()
+            s = "%s" % self.key
+            u = len(s)
+            first_line = (x + 1) * " " + (n - x - 1) * "_" + s
+            second_line = x * " " + "/" + (n - x - 1 + u) * " "
+            shifted_lines = [line + u * " " for line in lines]
+            return [first_line, second_line] + shifted_lines, n + u, p + 2, n + u // 2
+
+        # Only right child.
+        if self.left is None:
+            lines, n, p, x = self.right._display_aux()
+            s = "%s" % self.key
+            u = len(s)
+            first_line = s + x * "_" + (n - x) * " "
+            second_line = (u + x) * " " + "\\" + (n - x - 1) * " "
+            shifted_lines = [u * " " + line for line in lines]
+            return [first_line, second_line] + shifted_lines, n + u, p + 2, u // 2
+
+        # Two children.
+        left, n, p, x = self.left._display_aux()
+        right, m, q, y = self.right._display_aux()
+        s = "%s" % self.key
+        u = len(s)
+        first_line = (x + 1) * " " + (n - x - 1) * "_" + s + y * "_" + (m - y) * " "
+        second_line = (
+            x * " " + "/" + (n - x - 1 + u + y) * " " + "\\" + (m - y - 1) * " "
+        )
+        if p < q:
+            left += [n * " "] * (q - p)
+        elif q < p:
+            right += [m * " "] * (p - q)
+        zipped_lines = zip(left, right)
+        lines = [first_line, second_line] + [a + u * " " + b for a, b in zipped_lines]
+        return lines, n + m + u, max(p, q) + 2, n + u // 2
+
+
+def print_tree(node, level=0):
+    if node != None:
+        print_tree(node.left, level + 1)
+        print(" " * 4 * level + "/")
+        print(" " * 4 * level + "--> " + str(node.value))
+        print(" " * 4 * level + "\\")
+        print_tree(node.right, level + 1)
+
 
 def create_tree(freq: dict[int | str, int]) -> Node:
     nodes = [Node(int(k), v) for k, v in freq.items()]
@@ -49,7 +111,7 @@ def calculate_freq(text: bytes) -> dict[int, int]:
     return dict(Counter(text))
 
 
-def node_to_code(node: Node, prefix: str = "") -> dict[int, str]:
+def node_to_code(node: Node, prefix: str = "", cnt=0) -> dict[int, str]:
     codes: dict[int, str] = {}
 
     if not (node.left or node.right or prefix):
@@ -58,8 +120,8 @@ def node_to_code(node: Node, prefix: str = "") -> dict[int, str]:
     if node.is_leaf:
         return {node.key: prefix}
 
-    codes.update(node_to_code(node.left, prefix + "0"))
-    codes.update(node_to_code(node.right, prefix + "1"))
+    codes.update(node_to_code(node.left, prefix + "0", cnt + 1))
+    codes.update(node_to_code(node.right, prefix + "1", cnt + 1))
 
     return codes
 
@@ -138,6 +200,7 @@ def run(filename: str, compress: bool = False, decompress: bool = False):
 
     with open(filename, "rb") as f:
         data = f.read()
+        click.secho(len(data), fg="yellow", bold=True)
 
     if not data:
         click.secho("\nBad params", fg="red", bold=True)
@@ -148,12 +211,20 @@ def run(filename: str, compress: bool = False, decompress: bool = False):
         freq = calculate_freq(data)
         root_node = create_tree(freq)
         codes = node_to_code(root_node)
+
+        print("=================================")
+        for key, value in sorted(list(freq.items()), key=lambda x: x[1]):
+            print(f"{key} --- {value} ({codes[key]})")
+        print("=================================")
+
         compressed = compress_data(data, codes)
         freq_bytes = json.dumps(freq).encode()
         freq_len = len(freq_bytes)
-
+        res = freq_len.to_bytes(2, "big") + freq_bytes + compressed
         with open(f"{name}_compressed.{ext}", "wb") as f:
-            f.write(freq_len.to_bytes(2, "big") + freq_bytes + compressed)
+            f.write(res)
+            click.secho(len(res), fg="yellow", bold=True)
+            click.secho(len(compressed), fg="yellow", bold=True)
 
         click.secho("\nCompressed", fg="green", bold=True)
 
@@ -168,6 +239,8 @@ def run(filename: str, compress: bool = False, decompress: bool = False):
 
         with open(f"{name}_decompressed.{ext}", "wb") as f:
             f.write(decompressed)
+            click.secho(len(data), fg="yellow", bold=True)
+
         click.secho("\nDecompressed", fg="green", bold=True)
 
 
