@@ -256,16 +256,11 @@ class KeyGenRSA:
         return x % m
 
     def _extended_euclidean_gcd(self, a: int, b: int) -> tuple[int, int, int]:
-        """Return the gcd of a and b, and integers p and q such that
-
-        gcd(a, b) == p * a + b * q.
-
+        """
         Preconditions:
         - a >= 0
         - b >= 0
-
-        extended_euclidean_gcd(13, 10)
-        (1, 7, -9)
+        extended_euclidean_gcd(13, 10) -> (1, 7, -9)
         """
         x, y = a, b
 
@@ -277,12 +272,18 @@ class KeyGenRSA:
             assert x == px * a + qx * b
             assert y == py * a + qy * b
 
-            ans, r = divmod(x, y)
-            # x - q * y
-            # px * a + qx * b - q (py * a + qy * b)
-            # r = a (px - A*py) + b (qx - A * qy)
+            q, r = divmod(x, y)
+            # x = y * q + r
+            # => r = x - q * y
+            # x == (px*a + qx*b); y == (py*a + qy*b).
+            # => r = px*a + qx*b - q(py*a + qy*b)
+            # r = a*(px - q*py) + b*(qx - q*qy)
+            #       |----m----|     |----n----|
+            m, n = (px - py * q), (qx - qy * q)
 
-            m, n = px - py * ans, qx - qy * ans
+            # r = am + bn
+            # x <- y => (px, qx) <- (py, qy)
+            # y <- r => (py, qy) <- (m, n)
 
             x, y, px, qx, py, qy = y, r, py, qy, m, n
 

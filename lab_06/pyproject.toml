@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "lab-06"
+version = "0.1.0"
+description = ""
+authors = ["ivaaahn <ivahnencko01@gmail.com>"]
+readme = "README.md"
+packages = [{include = "lab_06"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.10.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

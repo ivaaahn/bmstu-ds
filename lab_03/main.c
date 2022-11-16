@@ -141,6 +141,31 @@ size_t DES(uint8_t * to, uint8_t mode, uint8_t * key8b, uint8_t * from, size_t l
     return length;
 }
 
+//------------
+// forth flow
+//------------
+//start:  Л П
+//1 П ЛШ
+//2 ЛШ ПШ
+//3 ПШ ЛШШ
+//4 ЛШШ ПШШ
+//back swap: ПШШ ЛШШ
+//result: ПШШ ЛШШ
+
+
+//------------
+// back flow
+//------------
+//start: ПШШ ЛШШ
+//4 ЛШШ ПШ
+//3 ПШ ЛШ
+//2 ЛШ П
+//1 П Л
+//back swap: Л П
+//result: Л П
+
+
+
 void feistel_cipher(uint8_t mode, uint32_t * N1, uint32_t * N2, uint64_t * keys48b) {
     switch(mode) {
         case 'E': case 'e': {
