@@ -81,7 +81,6 @@ class KeyGenRSA:
             self._public = PublicKey.from_bytes(f.read())
 
     def _generate(self) -> None:
-        # Compute the product of p and q
         click.secho("Generating keys...", fg="green")
 
         self._generate_p_and_q()
@@ -256,7 +255,7 @@ class KeyGenRSA:
         return x % m
 
     def _extended_euclidean_gcd(self, a: int, b: int) -> tuple[int, int, int]:
-        """
+        """GCD + Bezout's coeffs
         Preconditions:
         - a >= 0
         - b >= 0

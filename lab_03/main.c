@@ -305,16 +305,16 @@ void key_expansion_to_48bits(uint32_t block28b_1, uint32_t block28b_2, uint64_t 
 
     for (uint8_t i = 0; i < 16; ++i) {
         switch(i) {
-//          сдвигаем либо на два влево, либо на 1
+            // Сдвигаем либо на два влево, либо на 1
             case 0: case 1: case 8: case 15: n = 1; break;
             default: n = 2; break;
         }
 
-//        Сдвиги Si
+        // Сдвиги Si
         block28b_1 = LSHIFT_28BIT(block28b_1, n);
         block28b_2 = LSHIFT_28BIT(block28b_2, n);
 
-//        Склеиваем в 56 бит (Ci + Di)
+        // Склеиваем в 56 бит (Ci + Di)
         block56b = join_28bits_to_56bits(block28b_1, block28b_2);
 
         // Сжимающая перестановка CP 56бит -> 48бит
